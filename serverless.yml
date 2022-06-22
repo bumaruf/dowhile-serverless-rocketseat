@@ -1,0 +1,55 @@
+service: serverless-rocketseat
+
+frameworkVersion: '2 || 3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - { "Fn::GetAtt": ["ArticlesDynamoDBTable", "Arn" ] }
+
+functions:
+  createArticle:
+    handler: src/handler.createArticle
+    events:
+      - http:
+          path: /article
+          method: POST
+  getArticle:
+    handler: src/handler.getArticle
+    events:
+      - http:
+          path: /article/{id}
+          method: GET
+          request:
+            parameters:
+              paths:
+                id: true
+
+resources:
+  Resources:
+    ArticlesDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: articleId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: articleId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: articles
